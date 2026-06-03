@@ -1,0 +1,80 @@
+# docker-compose.base.yml
+services:
+  python-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: python-dev
+      args:
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        NO_PROXY: ${NO_PROXY}
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+        CONTAINER_REGISTRY_URL: ${CONTAINER_REGISTRY_URL:-localhost}
+    volumes:
+      - ./python:/app/src
+    ports:
+      - 8000:8000
+    environment:
+      OTEL_SERVICE_NAME: "fastapi-app"
+      OTEL_SERVICE_INSTANCE_ID: "fastapi-instance-1"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://collector:4318/v1/traces"
+      OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "http://collector:4318/v1/metrics"
+      OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "http://collector:4318/v1/logs"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://collector:4318"
+      # Proxy settings
+#      HTTP_PROXY: ${HTTP_PROXY}
+#      HTTPS_PROXY: ${HTTPS_PROXY}
+#      NO_PROXY: ${NO_PROXY}
+      # Explicitly tell uv to use the proxy
+#      UV_HTTP_PROXY: ${HTTPS_PROXY:-$HTTP_PROXY}
+#      UV_HTTPS_PROXY: ${HTTPS_PROXY}
+#      UV_NO_PROXY: ${NO_PROXY}
+    depends_on:
+      - collector
+    networks:
+      - observe-network
+
+  collector:
+    container_name: collector
+    image: ${CONTAINER_REGISTRY_URL:-docker.io}/otel/opentelemetry-collector-contrib:0.127.0
+    volumes:
+      - ./misc/otel/collector-config.yaml:/etc/otelcol-contrib/config.yaml
+    command: ["--config", "/etc/otelcol-contrib/config.yaml"]
+    expose:
+      - 4318 # OTLP http receiver
+    ports:
+      - 13133:13133 # health_check extension
+      - 4318:4318 # OTLP http receiver
+    environment:
+      OPENOBSERVE_ENDPOINT: "http://openobserve:5080/api/default"
+      OPENOBSERVE_AUTH_KEY: "cm9vdEBleGFtcGxlLmNvbTpJSFNGNHhweHJtVjJkdFoy" # echo -n 'EMAIL:PASSWORD' | base64
+      # Prevent proxying internal calls:
+      NO_PROXY: "openobserve,localhost,127.0.0.1,::1"
+      # If your environment injects proxies, explicitly unset them for this service:
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+    networks:
+      - observe-network
+
+  openobserve:
+    container_name: openobserve
+    image: ${CONTAINER_REGISTRY_URL:-docker.io}/openobserve/openobserve:v0.15.0-rc1
+    restart: unless-stopped
+    environment:
+      ZO_ROOT_USER_EMAIL: "root@example.com"
+      ZO_ROOT_USER_PASSWORD: "Complexpass#123"
+    volumes:
+      - data:/data
+    ports:
+      - 5080:5080
+    networks:
+      - observe-network
+    depends_on:
+      - collector
+
+networks:
+  observe-network:
+
+volumes:
+  data:

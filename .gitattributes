@@ -1,0 +1,2 @@
+# Enforce UNIX newlines
+* text=auto eol=lf

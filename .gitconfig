@@ -1,0 +1,5 @@
+[commit]
+    template = .gitmessage
+[alias]
+    st = status
+    co = checkout

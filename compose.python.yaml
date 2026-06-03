@@ -1,0 +1,13 @@
+# docker-compose.yml
+services:
+  python-app:
+    image: ${CONTAINER_REGISTRY_URL:-localhost}/fastapi:${APP_IMAGE_TAG:-latest}
+    container_name: fastapi
+    build:
+      context: .
+      target: python-prd
+      dockerfile: Dockerfile
+    volumes:
+      - ./python:/app/src
+    ports:
+      - 8000:8000

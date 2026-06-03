@@ -1,0 +1,6 @@
+[submodule "cpp/deps/oatpp"]
+	path = cpp/deps/oatpp
+	url = https://github.com/oatpp/oatpp
+[submodule "cpp/deps/opentelemetry-cpp"]
+	path = cpp/deps/opentelemetry-cpp
+	url = https://github.com/open-telemetry/opentelemetry-cpp

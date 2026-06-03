@@ -1,0 +1,13 @@
+site_name: Your Project Name
+theme:
+  name: "material"
+plugins:
+  - search
+  - mkdocstrings
+  - mkdocs-jupyter
+markdown_extensions:
+  - pymdownx.superfences
+  - pymdownx.tabbed
+nav:
+  - Home: index.md
+  - Notebook: notebooks/linting.ipynb

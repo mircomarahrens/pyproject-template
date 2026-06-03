@@ -1,0 +1,4 @@
+{
+    "cmake.sourceDirectory": "${workspaceFolder}/cpp/roll-dice",
+    "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json"
+}

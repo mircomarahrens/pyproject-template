@@ -1,0 +1,59 @@
+name: Build image and push image to registry
+run-name: build and push image to ghcr.io/${{ github.repository }}:tag-name triggered by ${{ github.actor }}
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [released, prereleased]
+
+jobs:
+  checks:
+    uses: ./.github/workflows/checks.yml
+    permissions: read-all
+    with:
+      runs-on: ubuntu-22.04
+      test-folder: tests
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set outputs
+        id: vars
+        run: echo "SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          # Install a specific version of uv.
+          version: "0.9.18"
+      - name: "Set up Python"
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "pyproject.toml"
+      - name: Run uv lock
+        run: uv lock
+      - name: Docker login to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Docker build
+        run: |
+          docker build -t ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.SHA_SHORT }} .
+      - name: Docker push
+        run: |
+          docker image push ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.SHA_SHORT }}
+      - name: Retag image for acceptance
+        if: github.event_name == 'prereleased' && github.event.release.prerelease == true
+        run: |
+          docker tag ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.SHA_SHORT }} ghcr.io/${{ github.repository }}:acceptance-${{ steps.vars.outputs.SHA_SHORT }}
+          docker tag ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.SHA_SHORT }} ghcr.io/${{ github.repository }}:acceptance-latest
+      - name: Retag image for production
+        if: github.event_name == 'released' && github.event.release.prerelease == false
+        run: |
+          docker tag ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.SHA_SHORT }} ghcr.io/${{ github.repository }}:production-${{ steps.vars.outputs.SHA_SHORT }}
+          docker tag ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.SHA_SHORT }} ghcr.io/${{ github.repository }}:latest
