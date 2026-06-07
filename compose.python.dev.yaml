@@ -23,13 +23,13 @@ services:
       OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "http://collector:4318/v1/logs"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://collector:4318"
       # Proxy settings
-#      HTTP_PROXY: ${HTTP_PROXY}
-#      HTTPS_PROXY: ${HTTPS_PROXY}
-#      NO_PROXY: ${NO_PROXY}
+      HTTP_PROXY: ${HTTP_PROXY}
+      HTTPS_PROXY: ${HTTPS_PROXY}
+      NO_PROXY: ${NO_PROXY}
       # Explicitly tell uv to use the proxy
-#      UV_HTTP_PROXY: ${HTTPS_PROXY:-$HTTP_PROXY}
-#      UV_HTTPS_PROXY: ${HTTPS_PROXY}
-#      UV_NO_PROXY: ${NO_PROXY}
+      UV_HTTP_PROXY: ${HTTPS_PROXY:-$HTTP_PROXY}
+      UV_HTTPS_PROXY: ${HTTPS_PROXY}
+      UV_NO_PROXY: ${NO_PROXY}
     depends_on:
       - collector
     networks:
@@ -39,7 +39,7 @@ services:
     container_name: collector
     image: ${CONTAINER_REGISTRY_URL:-docker.io}/otel/opentelemetry-collector-contrib:0.127.0
     volumes:
-      - ./misc/otel/collector-config.yaml:/etc/otelcol-contrib/config.yaml
+      - ./config/otel/collector-config.yaml:/etc/otelcol-contrib/config.yaml
     command: ["--config", "/etc/otelcol-contrib/config.yaml"]
     expose:
       - 4318 # OTLP http receiver
