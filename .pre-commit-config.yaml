@@ -36,11 +36,3 @@ repos:
     rev: 0.8.4
     hooks:
     - id: uv-lock
-  # # Poetry plugin for exporting requirements.
-  # - repo: https://github.com/python-poetry/poetry-plugin-export
-  #   rev: 1.9.0
-  #   hooks:
-  #   - id: poetry-export
-  #     args: [--with, "dev", -f, requirements.txt, -o, requirements.dev.txt]
-  #   - id: poetry-export
-  #     args: [--without, "dev", -f, requirements.txt, -o, requirements.txt]
