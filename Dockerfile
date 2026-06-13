@@ -51,8 +51,8 @@ CMD ["uv", "run", "fastapi", "run", "src/pyproject_template/api/otel.py", "--hos
 
 FROM python-runtime AS python-prd
 
-ADD ./python /app/python
+COPY --chown=1001:0 src /app/src
 
-CMD ["uv", "run", "fastapi", "run", "python/api/main.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "fastapi", "run", "src/pyproject_template/api/otel.py", "--host", "0.0.0.0", "--port", "8000"]
 
 #FROM base AS cpp-prd
