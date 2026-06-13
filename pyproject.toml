@@ -46,10 +46,10 @@ default-groups = [
 ]
 
 [tool.hatch.build.targets.sdist]
-include = ["src, api"]
+include = ["src/pyproject_template"]
 
 [tool.hatch.build.targets.wheel]
-include = ["src, api"]
+include = ["src/pyproject_template"]
 
 [build-system]
 requires = ["hatchling"]

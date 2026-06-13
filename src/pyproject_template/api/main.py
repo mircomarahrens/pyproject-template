@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from python.arithmetic import add_numbers
+from pyproject_template.arithmetic import add_numbers
 
 load_dotenv()
 

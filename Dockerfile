@@ -45,9 +45,9 @@ FROM python-runtime AS python-dev
 
 RUN uv sync --locked --all-extras --dev
 
-ADD ./python /app/python
+COPY --chown=1001:0 src /app/src
 
-CMD ["uv", "run", "fastapi", "run", "python/api/otel.py", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uv", "run", "fastapi", "run", "src/pyproject_template/api/otel.py", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 FROM python-runtime AS python-prd
 

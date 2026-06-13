@@ -1,4 +1,4 @@
-from python.arithmetic import add_numbers
+from pyproject_template.arithmetic import add_numbers
 
 
 def test_add_numbers():

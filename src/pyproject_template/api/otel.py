@@ -3,9 +3,9 @@ import os
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.sdk.resources import Resource
 
-from python.api.logger import initialize_logging
-from python.api.main import app
-from python.api.tracer import initialize_tracing
+from pyproject_template.api.logger import initialize_logging
+from pyproject_template.api.main import app
+from pyproject_template.api.tracer import initialize_tracing
 
 # Setup resource (optional: add more attributes)
 resource = Resource(

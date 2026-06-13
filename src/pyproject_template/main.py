@@ -1,4 +1,4 @@
-from python.arithmetic import add_numbers
+from pyproject_template.arithmetic import add_numbers
 
 if __name__ == "__main__":
     result = add_numbers(4, 17)

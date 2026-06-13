@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from python.api.main import app
+from pyproject_template.api.main import app
 
 client = TestClient(app)
 

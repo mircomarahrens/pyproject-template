@@ -12,7 +12,7 @@ services:
         PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
         CONTAINER_REGISTRY_URL: ${CONTAINER_REGISTRY_URL:-localhost}
     volumes:
-      - ./python:/app/src
+      - ./src:/app/src
     ports:
       - 8000:8000
     environment:

@@ -5,9 +5,9 @@ services:
     container_name: fastapi
     build:
       context: .
-      target: python-prd
+      target: python-dev
       dockerfile: Dockerfile
     volumes:
-      - ./python:/app/src
+      - ./src:/app/src
     ports:
       - 8000:8000
