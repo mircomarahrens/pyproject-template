@@ -83,3 +83,88 @@ per-file-ignores = {}
 
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.pytest.ini_options]
+# Test discovery patterns
+python_files = ["*_test.py", "test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+# Test paths
+testpaths = ["src/tests"]
+
+# Output options
+addopts = "-v --strict-markers --tb=short"
+
+# Markers for organizing tests
+markers = [
+    "unit: unit tests",
+    "integration: integration tests",
+    "slow: slow tests",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["src/pyproject_template"]
+omit = [
+    "*/tests/*",
+    "*/__main__.py",
+    "*/site-packages/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+    "@abc.abstractmethod",
+]
+precision = 2
+show_missing = true
+skip_covered = false
+# Set minimum coverage threshold
+fail_under = 70
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.poe.tasks]
+# Testing tasks
+test = "pytest"
+test-cov = "pytest --cov --cov-report=html --cov-report=term-missing"
+test-unit = { cmd = "pytest -m unit", help = "Run unit tests only" }
+test-integration = { cmd = "pytest -m integration", help = "Run integration tests only" }
+test-verbose = "pytest -vv"
+
+# Code quality tasks
+lint = "ruff check src/ --fix"
+format = "ruff format src/"
+format-check = "ruff format src/ --check"
+type-check = "ty src/"
+
+# Combined checks
+check = [
+  { cmd = "ruff check src/", help = "Check linting" },
+  { cmd = "ruff format src/ --check", help = "Check formatting" },
+  { cmd = "pytest", help = "Run tests" }
+]
+
+# Documentation tasks
+docs-build = "mkdocs build"
+docs-serve = "mkdocs serve"
+docs-deploy = "mkdocs gh-deploy"
+
+# Development utilities
+pre-commit-run = "pre-commit run --all-files"
+clean = """
+rm -rf dist/ build/ *.egg-info .pytest_cache .ruff_cache htmlcov/
+find . -type d -name __pycache__ -exec rm -rf {} +
+find . -type f -name '*.pyc' -delete
+"""
+
+# Help text
+_default = { help = "Run all checks and tests", cmd = "poe check && poe test-cov" }

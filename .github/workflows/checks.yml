@@ -13,7 +13,7 @@ on:
         required: true
         description: The name of the test folder.
         type: string
-        default: "tests"
+        default: "src/tests"
 
 jobs:
   pre-checks:
@@ -34,7 +34,7 @@ jobs:
           uv sync --all-extras --dev
       - name: Run pre-commit
         run: |
-          SKIP=ub-lock uv run pre-commit run --all-files
+          SKIP=uv-lock uv run pre-commit run --all-files
       - name: Run tests
         run: |
           uv run pytest ${{ inputs.test-folder }}

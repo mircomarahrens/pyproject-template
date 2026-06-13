@@ -14,7 +14,7 @@ jobs:
     permissions: read-all
     with:
       runs-on: ubuntu-22.04
-      test-folder: tests
+      test-folder: src/tests
   release:
     strategy:
       fail-fast: false
