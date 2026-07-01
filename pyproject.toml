@@ -12,7 +12,7 @@ dependencies = [
     "opentelemetry-api>=1.31.1,<2",
     "opentelemetry-exporter-otlp>=1.31.1,<2",
     "opentelemetry-distro>=0.54b1,<0.64",
-    "opentelemetry-instrumentation-fastapi>=0.54b1,<0.60",
+    "opentelemetry-instrumentation-fastapi>=0.54b1,<0.65",
     "opentelemetry-instrumentation-logging>=0.54b1,<0.60",
 ]
 
