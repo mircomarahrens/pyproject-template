@@ -37,3 +37,9 @@ def test_get_test_generator_values():
 def test_put_item_function_directly():
     item = Item(name="Pen", price=1.5, is_offer=None)
     assert put_item(10, item) == {"item_name": "Pen", "item_id": 10}
+
+
+def test_get_test_endpoint_streaming():
+    response = client.get("/test")
+    assert response.status_code == 200
+    assert response.text == "".join(f"{i}\n" for i in range(10))

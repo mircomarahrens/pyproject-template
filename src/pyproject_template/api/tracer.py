@@ -1,10 +1,10 @@
-import os
-
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+from pyproject_template.api.config import settings
 
 
 def initialize_tracing(resource: Resource = None) -> TracerProvider:
@@ -20,7 +20,7 @@ def initialize_tracing(resource: Resource = None) -> TracerProvider:
     trace.set_tracer_provider(provider)
 
     # Set up OTLP exporter for spans
-    trace_endpoint = os.getenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT")
+    trace_endpoint = settings.otel_exporter_otlp_traces_endpoint
     otlp_exporter = OTLPSpanExporter(endpoint=trace_endpoint)
     processor = BatchSpanProcessor(otlp_exporter)
     trace.get_tracer_provider().add_span_processor(processor)

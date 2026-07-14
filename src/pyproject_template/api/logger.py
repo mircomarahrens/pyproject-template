@@ -1,5 +1,4 @@
 import logging
-import os
 
 # Logging is in status experimental (marked by _), so it may change in future releases.
 from opentelemetry._logs import set_logger_provider
@@ -7,6 +6,8 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.sdk.resources import Resource
+
+from pyproject_template.api.config import settings
 
 
 def initialize_logging(resource: Resource = None) -> LoggerProvider:
@@ -20,7 +21,7 @@ def initialize_logging(resource: Resource = None) -> LoggerProvider:
     set_logger_provider(provider)
 
     # Set up OTLP exporter (to send to OpenTelemetry Collector)
-    logs_endpoint = os.getenv("OTEL_EXPORTER_OTLP_LOGS_ENDPOINT")
+    logs_endpoint = settings.otel_exporter_otlp_logs_endpoint
     otlp_exporter = OTLPLogExporter(endpoint=logs_endpoint)
     provider.add_log_record_processor(BatchLogRecordProcessor(otlp_exporter))
 

@@ -47,12 +47,12 @@ RUN uv sync --locked --all-extras --dev
 
 COPY --chown=1001:0 src /app/src
 
-CMD ["uv", "run", "fastapi", "run", "src/pyproject_template/api/otel.py", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uv", "run", "fastapi", "run", "src/pyproject_template/api/main.py", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 FROM python-runtime AS python-prd
 
 COPY --chown=1001:0 src /app/src
 
-CMD ["uv", "run", "fastapi", "run", "src/pyproject_template/api/otel.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "fastapi", "run", "src/pyproject_template/api/main.py", "--host", "0.0.0.0", "--port", "8000"]
 
 #FROM base AS cpp-prd

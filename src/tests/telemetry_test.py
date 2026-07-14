@@ -2,6 +2,7 @@ import importlib
 import runpy
 
 import pyproject_template.api.logger as logger_module
+import pyproject_template.api.meter as meter_module
 import pyproject_template.api.tracer as tracer_module
 
 
@@ -52,8 +53,12 @@ def test_initialize_logging(monkeypatch):
         calls["endpoint"] = endpoint
         return {"endpoint": endpoint}
 
-    monkeypatch.setenv(
-        "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT", "http://localhost:4318/v1/logs"
+    import pyproject_template.api.config as config_module
+
+    monkeypatch.setattr(
+        config_module.settings,
+        "otel_exporter_otlp_logs_endpoint",
+        "http://localhost:4318/v1/logs",
     )
     monkeypatch.setattr(logger_module, "LoggerProvider", _DummyProvider)
     monkeypatch.setattr(logger_module, "set_logger_provider", _set_provider)
@@ -94,8 +99,12 @@ def test_initialize_tracing(monkeypatch):
 
     trace_shim = _TraceShim()
 
-    monkeypatch.setenv(
-        "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", "http://localhost:4318/v1/traces"
+    import pyproject_template.api.config as config_module
+
+    monkeypatch.setattr(
+        config_module.settings,
+        "otel_exporter_otlp_traces_endpoint",
+        "http://localhost:4318/v1/traces",
     )
     monkeypatch.setattr(tracer_module, "TracerProvider", _DummyTracerProvider)
     monkeypatch.setattr(
@@ -115,8 +124,57 @@ def test_initialize_tracing(monkeypatch):
     ]
 
 
+class _DummyMeterProvider:
+    def __init__(self, resource=None, metric_readers=None):
+        self.resource = resource
+        self.metric_readers = metric_readers
+
+
+def test_initialize_metrics(monkeypatch):
+    calls = {"set_provider": None, "endpoint": None}
+
+    class _MetricsShim:
+        def __init__(self):
+            self.provider = None
+
+        def set_meter_provider(self, provider):
+            calls["set_provider"] = provider
+            self.provider = provider
+
+        def get_meter_provider(self):
+            return self.provider
+
+    metrics_shim = _MetricsShim()
+
+    import pyproject_template.api.config as config_module
+
+    monkeypatch.setattr(
+        config_module.settings,
+        "otel_exporter_otlp_metrics_endpoint",
+        "http://localhost:4318/v1/metrics",
+    )
+    monkeypatch.setattr(meter_module, "MeterProvider", _DummyMeterProvider)
+    monkeypatch.setattr(
+        meter_module, "OTLPMetricExporter", lambda endpoint=None: {"endpoint": endpoint}
+    )
+    monkeypatch.setattr(
+        meter_module,
+        "PeriodicExportingMetricReader",
+        lambda exporter: {"reader": exporter},
+    )
+    monkeypatch.setattr(meter_module, "metrics", metrics_shim)
+
+    provider = meter_module.initialize_metrics(resource=None)
+
+    assert isinstance(provider, _DummyMeterProvider)
+    assert calls["set_provider"] is provider
+    assert provider.metric_readers == [
+        {"reader": {"endpoint": "http://localhost:4318/v1/metrics"}}
+    ]
+
+
 def test_otel_module_initialization(monkeypatch):
-    calls = {"log": None, "trace": None, "instrumented": False}
+    calls = {"log": None, "trace": None, "metrics": None, "instrumented": False}
 
     def _init_log(resource):
         calls["log"] = resource
@@ -125,6 +183,10 @@ def test_otel_module_initialization(monkeypatch):
         calls["trace"] = resource
         return "trace-provider"
 
+    def _init_metrics(resource):
+        calls["metrics"] = resource
+        return "metrics-provider"
+
     class _DummyInstrumentor:
         @staticmethod
         def instrument_app(app, tracer_provider=None, meter_provider=None):
@@ -132,21 +194,41 @@ def test_otel_module_initialization(monkeypatch):
             calls["tracer_provider"] = tracer_provider
             calls["meter_provider"] = meter_provider
 
-    monkeypatch.setenv("OTEL_SERVICE_NAME", "fastapi-app")
-    monkeypatch.setenv("OTEL_SERVICE_INSTANCE_ID", "instance-1")
+    import pyproject_template.api.config as config_module
+
+    monkeypatch.setattr(config_module.settings, "otel_service_name", "fastapi-app")
+    monkeypatch.setattr(
+        config_module.settings, "otel_service_instance_id", "instance-1"
+    )
     monkeypatch.setattr("pyproject_template.api.logger.initialize_logging", _init_log)
     monkeypatch.setattr("pyproject_template.api.tracer.initialize_tracing", _init_trace)
+    monkeypatch.setattr(
+        "pyproject_template.api.meter.initialize_metrics", _init_metrics
+    )
     monkeypatch.setattr(
         "opentelemetry.instrumentation.fastapi.FastAPIInstrumentor", _DummyInstrumentor
     )
 
+    class DummyApp:
+        class State:
+            pass
+
+        def __init__(self):
+            self.state = DummyApp.State()
+
+    dummy_app = DummyApp()
     otel_module = importlib.import_module("pyproject_template.api.otel")
     importlib.reload(otel_module)
+    otel_module.setup_telemetry(dummy_app)
 
     assert calls["log"] is not None
     assert calls["trace"] is not None
+    assert calls["metrics"] is not None
     assert calls["instrumented"] is True
     assert calls["tracer_provider"] == "trace-provider"
+    assert calls["meter_provider"] == "metrics-provider"
+    assert dummy_app.state.trace_provider == "trace-provider"
+    assert dummy_app.state.meter_provider == "metrics-provider"
 
 
 def test_main_module_runs_as_script(capsys):

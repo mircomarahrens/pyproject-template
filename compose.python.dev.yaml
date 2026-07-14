@@ -48,7 +48,7 @@ services:
       - 4318:4318 # OTLP http receiver
     environment:
       OPENOBSERVE_ENDPOINT: "http://openobserve:5080/api/default"
-      OPENOBSERVE_AUTH_KEY: "cm9vdEBleGFtcGxlLmNvbTpJSFNGNHhweHJtVjJkdFoy" # echo -n 'EMAIL:PASSWORD' | base64
+      OPENOBSERVE_AUTH_KEY: "cm9vdEBleGFtcGxlLmNvbTpDb21wbGV4cGFzcyMxMjM=" # echo -n 'EMAIL:PASSWORD' | base64
       # Prevent proxying internal calls:
       NO_PROXY: "openobserve,localhost,127.0.0.1,::1"
       # If your environment injects proxies, explicitly unset them for this service:
