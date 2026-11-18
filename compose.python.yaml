@@ -8,6 +8,6 @@ services:
       target: python-dev
       dockerfile: Dockerfile
     volumes:
-      - ./src:/app/src
+      - ./src:/app/src:Z
     ports:
       - 8000:8000

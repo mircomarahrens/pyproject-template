@@ -12,7 +12,7 @@ services:
         PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
         CONTAINER_REGISTRY_URL: ${CONTAINER_REGISTRY_URL:-localhost}
     volumes:
-      - ./src:/app/src
+      - ./src:/app/src:Z
     ports:
       - 8000:8000
     environment:
@@ -39,7 +39,7 @@ services:
     container_name: collector
     image: ${CONTAINER_REGISTRY_URL:-docker.io}/otel/opentelemetry-collector-contrib:0.127.0
     volumes:
-      - ./config/otel/collector-config.yaml:/etc/otelcol-contrib/config.yaml
+      - ./config/otel/collector-config.yaml:/etc/otelcol-contrib/config.yaml:Z
     command: ["--config", "/etc/otelcol-contrib/config.yaml"]
     expose:
       - 4318 # OTLP http receiver
