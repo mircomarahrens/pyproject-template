@@ -37,7 +37,7 @@ services:
 
   collector:
     container_name: collector
-    image: ${CONTAINER_REGISTRY_URL:-docker.io}/otel/opentelemetry-collector-contrib:0.127.0
+    image: ${CONTAINER_REGISTRY_URL:-docker.io}/otel/opentelemetry-collector-contrib:0.165.0
     volumes:
       - ./config/otel/collector-config.yaml:/etc/otelcol-contrib/config.yaml:Z
     command: ["--config", "/etc/otelcol-contrib/config.yaml"]
@@ -59,7 +59,7 @@ services:
 
   openobserve:
     container_name: openobserve
-    image: ${CONTAINER_REGISTRY_URL:-docker.io}/openobserve/openobserve:v0.15.0-rc1
+    image: ${CONTAINER_REGISTRY_URL:-docker.io}/openobserve/openobserve:v1.1.2
     restart: unless-stopped
     environment:
       ZO_ROOT_USER_EMAIL: "root@example.com"

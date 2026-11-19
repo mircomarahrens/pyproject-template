@@ -1,8 +1,8 @@
 FROM registry.access.redhat.com/ubi9/python-312 AS base
 #FROM ubi9/python-312 AS base
 
-FROM ghcr.io/astral-sh/uv:0.8.4 AS uv
-#FROM astral/uv:0.8.4 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.9 AS uv
+#FROM astral/uv:0.13.9 AS uv
 
 FROM base AS python-runtime
 COPY --from=uv /uv /uvx /bin/

@@ -14,7 +14,7 @@ processors:
 exporters:
   debug:
     verbosity: detailed
-  otlphttp/openobserve:
+  otlp_http/openobserve:
     endpoint: ${env:OPENOBSERVE_ENDPOINT}
     headers:
       Authorization: Basic ${env:OPENOBSERVE_AUTH_KEY} 
@@ -25,12 +25,12 @@ service:
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug, otlphttp/openobserve]
+      exporters: [debug, otlp_http/openobserve]
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug, otlphttp/openobserve]
+      exporters: [debug, otlp_http/openobserve]
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug, otlphttp/openobserve]
+      exporters: [debug, otlp_http/openobserve]
