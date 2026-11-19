@@ -1,0 +1,96 @@
+# Default values for pyproject-template.
+replicaCount: 1
+
+image:
+  repository: localhost/fastapi
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 8000
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+telemetry:
+  serviceName: "fastapi-app"
+  otlpEndpoint: "" # defaults to http://<release>-opentelemetry-collector:4318
+
+extraEnv: []
+
+# ------------------------------------------------------------------------------
+# OpenTelemetry Collector Sub-chart configuration
+# ------------------------------------------------------------------------------
+opentelemetry-collector:
+  enabled: true
+  mode: deployment
+  image:
+    repository: "otel/opentelemetry-collector-contrib"
+    tag: "0.165.0"
+  ports:
+    otlp:
+      enabled: true
+      containerPort: 4317
+      servicePort: 4317
+    otlp-http:
+      enabled: true
+      containerPort: 4318
+      servicePort: 4318
+    health-check:
+      enabled: true
+      containerPort: 13133
+      servicePort: 13133
+  config:
+    receivers:
+      otlp:
+        protocols:
+          http:
+            endpoint: 0.0.0.0:4318
+            cors:
+              allowed_origins:
+                - "http://*"
+                - "https://*"
+    processors:
+      batch: {}
+    exporters:
+      debug:
+        verbosity: detailed
+      otlp_http/openobserve:
+        endpoint: "http://pyproject-openobserve-standalone:5080/api/default"
+        headers:
+          Authorization: "Basic cm9vdEBleGFtcGxlLmNvbTpDb21wbGV4cGFzcyMxMjM="
+          stream-name: default
+    service:
+      pipelines:
+        logs:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug, otlp_http/openobserve]
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug, otlp_http/openobserve]
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug, otlp_http/openobserve]
+
+# ------------------------------------------------------------------------------
+# OpenObserve Standalone Sub-chart configuration
+# ------------------------------------------------------------------------------
+openobserve-standalone:
+  enabled: true
+  image:
+    tag: "v1.1.2"
+  auth:
+    rootUserEmail: "root@example.com"
+    rootUserPassword: "Complexpass#123"
