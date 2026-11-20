@@ -55,8 +55,8 @@ def test_dashboard_addition_success(mock_streamlit, monkeypatch):
     mock_st = mock_streamlit
 
     # Mock "Calculate Addition" button to be clicked
-    mock_st.button.side_effect = (
-        lambda label, *args, **kwargs: label == "Calculate Addition"
+    mock_st.button.side_effect = lambda label, *args, **kwargs: (
+        label == "Calculate Addition"
     )
 
     # Mock requests.get
@@ -72,8 +72,8 @@ def test_dashboard_addition_success(mock_streamlit, monkeypatch):
 
 def test_dashboard_addition_failure(mock_streamlit, monkeypatch):
     mock_st = mock_streamlit
-    mock_st.button.side_effect = (
-        lambda label, *args, **kwargs: label == "Calculate Addition"
+    mock_st.button.side_effect = lambda label, *args, **kwargs: (
+        label == "Calculate Addition"
     )
 
     # Mock requests.get to return non-200
@@ -88,8 +88,8 @@ def test_dashboard_addition_failure(mock_streamlit, monkeypatch):
 
 def test_dashboard_addition_exception(mock_streamlit, monkeypatch):
     mock_st = mock_streamlit
-    mock_st.button.side_effect = (
-        lambda label, *args, **kwargs: label == "Calculate Addition"
+    mock_st.button.side_effect = lambda label, *args, **kwargs: (
+        label == "Calculate Addition"
     )
 
     # Mock requests.get to raise exception
@@ -120,10 +120,8 @@ def test_dashboard_item_success(mock_streamlit, monkeypatch):
 def test_dashboard_item_success_no_query(mock_streamlit, monkeypatch):
     mock_st = mock_streamlit
     mock_st.button.side_effect = lambda label, *args, **kwargs: label == "Lookup Item"
-    mock_st.text_input.side_effect = (
-        lambda label, *args, **kwargs: ""
-        if "Query Parameter" in label
-        else kwargs.get("value", "")
+    mock_st.text_input.side_effect = lambda label, *args, **kwargs: (
+        "" if "Query Parameter" in label else kwargs.get("value", "")
     )
 
     # Mock requests.get
@@ -167,8 +165,8 @@ def test_dashboard_item_exception(mock_streamlit, monkeypatch):
 
 def test_dashboard_stream_success(mock_streamlit, monkeypatch):
     mock_st = mock_streamlit
-    mock_st.button.side_effect = (
-        lambda label, *args, **kwargs: label == "🚀 Start Event Stream"
+    mock_st.button.side_effect = lambda label, *args, **kwargs: (
+        label == "🚀 Start Event Stream"
     )
 
     # Mock time.sleep to avoid wait
@@ -187,8 +185,8 @@ def test_dashboard_stream_success(mock_streamlit, monkeypatch):
 
 def test_dashboard_stream_failure(mock_streamlit, monkeypatch):
     mock_st = mock_streamlit
-    mock_st.button.side_effect = (
-        lambda label, *args, **kwargs: label == "🚀 Start Event Stream"
+    mock_st.button.side_effect = lambda label, *args, **kwargs: (
+        label == "🚀 Start Event Stream"
     )
 
     # Mock requests.get returning non-200
@@ -203,8 +201,8 @@ def test_dashboard_stream_failure(mock_streamlit, monkeypatch):
 
 def test_dashboard_stream_exception(mock_streamlit, monkeypatch):
     mock_st = mock_streamlit
-    mock_st.button.side_effect = (
-        lambda label, *args, **kwargs: label == "🚀 Start Event Stream"
+    mock_st.button.side_effect = lambda label, *args, **kwargs: (
+        label == "🚀 Start Event Stream"
     )
 
     # Mock requests.get raising exception
