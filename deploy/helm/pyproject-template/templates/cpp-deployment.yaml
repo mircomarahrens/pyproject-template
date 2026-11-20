@@ -1,0 +1,31 @@
+{{- if .Values.cppApp.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pyproject-template.fullname" . }}-cpp
+  labels:
+    {{- include "pyproject-template.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cpp-app
+spec:
+  replicas: {{ .Values.cppApp.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "pyproject-template.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: cpp-app
+  template:
+    metadata:
+      labels:
+        {{- include "pyproject-template.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: cpp-app
+    spec:
+      containers:
+        - name: dice-server
+          image: "{{ .Values.cppApp.image.repository }}:{{ .Values.cppApp.image.tag }}"
+          imagePullPolicy: {{ .Values.cppApp.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.cppApp.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.cppApp.resources | nindent 12 }}
+{{- end }}

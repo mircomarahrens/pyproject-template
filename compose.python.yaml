@@ -11,3 +11,13 @@ services:
       - ./src:/app/src:Z
     ports:
       - 8000:8000
+
+  cpp-app:
+    image: ${CONTAINER_REGISTRY_URL:-localhost}/dice-server:${APP_IMAGE_TAG:-latest}
+    container_name: dice-server
+    build:
+      context: .
+      target: cpp-prd
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080

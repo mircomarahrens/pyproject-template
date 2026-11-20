@@ -1,0 +1,19 @@
+{{- if .Values.cppApp.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pyproject-template.fullname" . }}-cpp
+  labels:
+    {{- include "pyproject-template.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cpp-app
+spec:
+  type: {{ .Values.cppApp.service.type }}
+  ports:
+    - port: {{ .Values.cppApp.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "pyproject-template.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: cpp-app
+{{- end }}

@@ -35,6 +35,24 @@ services:
     networks:
       - observe-network
 
+  cpp-app:
+    image: ${CONTAINER_REGISTRY_URL:-localhost}/dice-server:${APP_IMAGE_TAG:-latest}
+    container_name: dice-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: cpp-prd
+    ports:
+      - 8080:8080
+    environment:
+      OTEL_SERVICE_NAME: "dice-server"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://collector:4318/v1/traces"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://collector:4318"
+    depends_on:
+      - collector
+    networks:
+      - observe-network
+
   collector:
     container_name: collector
     image: ${CONTAINER_REGISTRY_URL:-docker.io}/otel/opentelemetry-collector-contrib:0.165.0

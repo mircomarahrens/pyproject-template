@@ -1,32 +1,44 @@
 cmake_minimum_required(VERSION 3.25)
-project(RollDiceServer)
+project(RollDiceServer CXX)
 
-# Set C++ standard (e.g., C++17)
-set(CMAKE_CXX_STANDARD 17)
-set(project_name roll-dice-server)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Define your project's source files
-set(SOURCES
-    main.cpp  # Add your source files here
+include(FetchContent)
+
+# 1. Fetch Oat++ (disable test suite)
+set(OATPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    oatpp
+    GIT_REPOSITORY https://github.com/oatpp/oatpp.git
+    GIT_TAG        1.3.0-latest
+    GIT_SHALLOW    TRUE
 )
 
-# Create an executable target
-add_executable(dice-server ${SOURCES})
+# 2. Fetch OpenTelemetry C++ SDK (disable test suites)
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(WITH_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(WITH_BENCHMARK OFF CACHE BOOL "" FORCE)
+set(WITH_STL ON CACHE BOOL "" FORCE)
+set(WITH_OTLP_HTTP ON CACHE BOOL "" FORCE)
+set(WITH_OTLP_GRPC OFF CACHE BOOL "" FORCE)
 
-set(OATPP_ROOT deps/oatpp)
-set(opentelemetry-cpp_DIR deps/otel-cpp/lib/cmake/opentelemetry-cpp)
-find_library(OATPP_LIB NAMES liboatpp.a HINTS "${OATPP_ROOT}/build/src/" NO_DEFAULT_PATH)
-if (NOT OATPP_LIB)
-  message(SEND_ERROR "Did not find oatpp library ${OATPP_ROOT}/build/src")
-endif()
+FetchContent_Declare(
+    opentelemetry-cpp
+    GIT_REPOSITORY https://github.com/open-telemetry/opentelemetry-cpp.git
+    GIT_TAG        v1.30.0
+    GIT_SHALLOW    TRUE
+)
 
-# set the path to the directory containing "oatpp" package configuration files
-include_directories(${OATPP_ROOT}/src)
+FetchContent_MakeAvailable(oatpp opentelemetry-cpp)
 
-# Use find_package to include OpenTelemetry C++
-find_package(opentelemetry-cpp CONFIG REQUIRED NO_DEFAULT_PATH)
+# 3. Target
+add_executable(dice-server main.cpp)
 
-# Link against each OpenTelemetry C++ library
 target_link_libraries(dice-server PRIVATE
-                      ${OATPP_LIB}
-                      ${OPENTELEMETRY_CPP_LIBRARIES})
+    oatpp
+    opentelemetry_trace
+    opentelemetry_exporter_otlp_http
+    opentelemetry_resources
+)

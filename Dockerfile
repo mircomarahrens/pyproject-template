@@ -56,4 +56,23 @@ COPY --chown=1001:0 src /app/src
 
 CMD ["uv", "run", "fastapi", "run", "src/pyproject_template/api/main.py", "--host", "0.0.0.0", "--port", "8000"]
 
-#FROM base AS cpp-prd
+FROM registry.access.redhat.com/ubi9/ubi:latest AS cpp-builder
+
+RUN dnf install -y gcc-c++ cmake git make libatomic libcurl-devel && dnf clean all
+
+WORKDIR /build
+COPY cpp/roll-dice /build
+RUN cmake -B out -DCMAKE_BUILD_TYPE=Release -DOATPP_BUILD_TESTS=OFF -DBUILD_TESTING=OFF && \
+    cmake --build out --target dice-server -j$(nproc)
+
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest AS cpp-prd
+
+RUN microdnf install -y libatomic && microdnf clean all
+
+WORKDIR /app
+COPY --from=cpp-builder /build/out/dice-server /app/dice-server
+
+USER 1001
+EXPOSE 8080
+
+CMD ["/app/dice-server"]
