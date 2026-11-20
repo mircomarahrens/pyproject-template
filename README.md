@@ -1,15 +1,14 @@
 # Welcome to the Pyproject Template repository
 
-This is a template for Python projects. It can be used as a starting point for
-new Python projects.
+This is a modern template for Python projects. It can be used as a starting point for building production-ready applications featuring **FastAPI**, **Streamlit**, full observability via **OpenTelemetry** and **OpenObserve**, and container/Kubernetes deployments with **Podman** and **Helm**.
 
-This template is based on the Python packaging and dependency management tool
-[uv](https://docs.astral.sh/uv/). The central file for project management in
-uv is the file `pyproject.toml`.
+This template is based on the ultra-fast Python package and dependency manager [uv](https://docs.astral.sh/uv/). The central file for project configuration is `pyproject.toml`.
+
+---
 
 ## Best practices with Git
 
-```bash
+```ini
 [user]
     name = Max Mustermann
     email = abc@domain.xyz
@@ -21,317 +20,270 @@ uv is the file `pyproject.toml`.
     template = /home/abc/.gitmessage
 [gpg]
     format = ssh
-# if you have to deal with multiple git accounts you can use something like:
+# If you deal with multiple git accounts:
 [includeIf "gitdir:~/github/privategit"]
     path = ~/github/privategit/.gitconfig
 ```
 
-The file `~/.gitmessage` is used as a template for commit messages. Our file
-here looks like this:
+The file `~/.gitmessage` is used as a template for commit messages. An example following [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/):
 
 ```bash
 $ cat .gitmessage
 <type>[optional scope]: <description>
-# Following <https://www.conventionalcommits.org/en/v1.0.0/>
-# <type>[optional scope]: <description>
-#
-#
+
 # [optional body]
-#
+
 # [optional footer(s)]
 #
-# The commit contains the following structural elements, to communicate intent to the consumers of your library:
-#
-# 1. fix: a commit of the type fix patches a bug in your codebase (this correlates with PATCH in Semantic Versioning).
-# 2. feat: a commit of the type feat introduces a new feature to the codebase (this correlates with MINOR in Semantic Versioning).
-# 3. BREAKING CHANGE: a commit that has a footer BREAKING CHANGE:, or appends a ! after the type/scope, introduces a breaking API change (correlating with MAJOR in Semantic Versioning). A BREAKING CHANGE can be part of commits of any type.
-# 4. types other than fix: and feat: are allowed, for example @commitlint/config-conventional (based on the Angular convention) recommends build:, chore:, ci:, docs:, style:, refactor:, perf:, test:, and others.
-# 5. footers other than BREAKING CHANGE: <description> may be provided and follow a convention similar to git trailer format.
-#
-
+# Common commit types:
+# 1. fix: patches a bug in your codebase (PATCH in SemVer).
+# 2. feat: introduces a new feature (MINOR in SemVer).
+# 3. BREAKING CHANGE: introduces breaking API changes (MAJOR in SemVer).
+# 4. chore:, docs:, test:, style:, refactor:, perf:, ci:, build:
 ```
 
-The content after `#` are comments and are ignored by git.
+---
 
-## Project
+## Project Setup & Development
 
-### Pre-dependencies
+### Prerequisites
 
-- [Poetry (Python Packaging and Dependency Management)](https://python-poetry.org/)
-- [Pre-Commit (Managing the pre-commit Git hook)](https://pre-commit.com/)
+- [Python >= 3.12, < 3.15](https://www.python.org/)
+- [uv (Python Packaging and Virtual Environments)](https://docs.astral.sh/uv/)
+- [Pre-Commit (Managing Git hooks)](https://pre-commit.com/)
+- Optional: [Podman](https://podman.io/) / [Podman Compose](https://github.com/containers/podman-compose)
+- Optional: [Helm](https://helm.sh/) & [Minikube](https://minikube.sigs.k8s.io/) / Kubernetes
 
-### Getting started
+### Getting Started
 
-Run from the root directory of this repository (actually where the
-'pyproject.toml' is located)
+Install all dependencies (including `dev` and `docs` dependency groups) and set up the virtual environment:
 
 ```bash
 uv sync
 ```
 
-To start the virtual environment run
+To activate the virtual environment:
 
 ```bash
 source .venv/bin/activate
 ```
 
-To stop the virtual environment run
+To deactivate:
 
 ```bash
 deactivate
 ```
 
-### Unittesting via `pytest`
+---
 
-To check if the envrionment is set up correctly run `pytest`, like
+## Developer Workflow & Tasks (`poe`)
 
-```bash
-> pytest
-========================= test session starts ==========================
-platform linux -- Python 3.11.13, pytest-9.0.2, pluggy-1.6.0
-rootdir: /home/mircomarahrens/github/mircomarahrens/pyproject-template
-configfile: pyproject.toml
-plugins: anyio-4.12.1, cov-7.0.0, mock-3.15.1
-collected 2 items
+This template includes [Poe the Poet](https://poethepoet.natn.io/) to streamline common development tasks:
 
-tests/app_test.py .                                              [ 50%]
-tests/server_test.py .                                           [100%]
+| Command | Action |
+| --- | --- |
+| `uv run poe check` | Runs linting (`ruff`), format checking, and tests in one command |
+| `uv run poe test` | Runs the test suite with `pytest` |
+| `uv run poe test-cov` | Runs tests with terminal and HTML coverage reports (`htmlcov/`) |
+| `uv run poe lint` | Checks and auto-fixes lint issues with `ruff` |
+| `uv run poe format` | Formats code with `ruff format` |
+| `uv run poe type-check` | Runs static type checks |
+| `uv run poe dashboard` | Starts the Streamlit dashboard |
+| `uv run poe docs-serve` | Serves the documentation locally with live reloading |
+| `uv run poe docs-build` | Builds the static MkDocs documentation site |
+| `uv run poe clean` | Cleans build caches, temp files, and artifacts |
 
-========================== 2 passed in 0.69s ===========================
-```
+---
 
-Your output should be similiar to the above output. One test is failing on
-purpose.
+## Running Applications Locally
 
-#### Coverage testing with `pytest-cov`
+### 1. FastAPI REST API
 
-```bash
-> pytest --cov
-========================= test session starts ==========================
-platform linux -- Python 3.11.13, pytest-9.0.2, pluggy-1.6.0
-rootdir: /home/mircomarahrens/github/mircomarahrens/pyproject-template
-configfile: pyproject.toml
-plugins: anyio-4.12.1, cov-7.0.0, mock-3.15.1
-collected 2 items
+The FastAPI application is located in `src/pyproject_template/api/main.py`.
 
-tests/app_test.py .                                              [ 50%]
-tests/server_test.py .                                           [100%]
-
-============================ tests coverage ============================
-___________ coverage: platform linux, python 3.11.13-final-0 ___________
-
-Name                     Stmts   Miss  Cover
---------------------------------------------
-python/__init__.py           0      0   100%
-python/api/__init__.py       0      0   100%
-python/api/main.py          34     10    71%
-python/arithmetic.py         2      0   100%
-tests/__init__.py            0      0   100%
-tests/app_test.py            3      0   100%
-tests/server_test.py         7      0   100%
---------------------------------------------
-TOTAL                       46     10    78%
-========================== 2 passed in 1.53s ===========================
-```
-
-### Serving restful APIs via `fastapi`
-
-You can find in the file `api/server.py` some basic code to serve restful APIs
-via [FastAPI](ttps://fastapi.tiangolo.com/). To start the server simply run
+Run in development mode (with hot reloading):
 
 ```bash
-> fastapi dev api/server.py
-INFO     Using path api/server.py
-INFO     Resolved absolute path /Users/mircomarahrens/Projects/pyproject-template/api/server.py
-INFO     Searching for package file structure from directories with __init__.py files
-INFO     Importing from /Users/mircomarahrens/Projects/pyproject-template
-
- ╭─ Python package file structure ─╮
- │                                 │
- │  📁 api                         │
- │  ├── 🐍 __init__.py             │
- │  └── 🐍 server.py               │
- │                                 │
- ╰─────────────────────────────────╯
-
-INFO     Importing module api.server
-INFO     Found importable FastAPI app
-
- ╭─── Importable FastAPI app ───╮
- │                              │
- │  from api.server import app  │
- │                              │
- ╰──────────────────────────────╯
-
-INFO     Using import string api.server:app
-
- ╭────────── FastAPI CLI - Development mode ───────────╮
- │                                                     │
- │  Serving at: http://127.0.0.1:8000                  │
- │                                                     │
- │  API docs: http://127.0.0.1:8000/docs               │
- │                                                     │
- │  Running in development mode, for production use:   │
- │                                                     │
- │  fastapi run                                        │
- │                                                     │
- ╰─────────────────────────────────────────────────────╯
-
-INFO:     Will watch for changes in these directories: ['/Users/mircomarahrens/Projects/pyproject-template']
-INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [11520] using WatchFiles
-INFO:     Started server process [11522]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
+uv run fastapi dev src/pyproject_template/api/main.py
 ```
 
-FastAPI provides a Swagger-UI. Visit <http://127.0.0.1:8000/docs> to see it.
-Shutdown the server via <CTRL+C>.
-
-### Pre-commit
-
-To install the pre-commit hooks run the following command
+Run in production mode:
 
 ```bash
-> pre-commit install
+uv run fastapi run src/pyproject_template/api/main.py --port 8000
 ```
 
-To manually run the pre-commit hooks run the following command
+- **Interactive API Docs (Swagger UI)**: Visit [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Alternative API Docs (ReDoc)**: Visit [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+### 2. Streamlit Dashboard
+
+Start the Streamlit interactive dashboard:
 
 ```bash
-> pre-commit run --all-files
+uv run poe dashboard
+# or: uv run streamlit run src/pyproject_template/dashboard/main.py
 ```
 
-### Linting
+Access the dashboard at [http://localhost:8501](http://localhost:8501).
 
-We are using [Ruff](https://github.com/astral-sh/ruff) for linting. Ruff is a
-linter and formatter for Python code. Ruff uses
-[rules](https://docs.astral.sh/ruff/rules/) which are based on style guides
-([Pep8](https://peps.python.org/pep-0008/) is the root of those style guides).
-The rules are defined in the file `pyproject.toml` under the section
-`[tool.ruff.rules]`. One can explicit include or exclude rules, like
+---
 
-```toml
-[tool.ruff.lint]
-select = [
-    "E", # pycodestyle
-    "W", # pycodestyle
-    "F", # Pyflakes
-    "B", # flake8-bugbear
-    "PIE", # flake8-pie
-    "C4", # flake8-comprehensions
-    "I", # isort
-    "UP", # pyupgrade
-]
-ignore = ["E501","E203","B024","B028","UP037"]
-```
+## Code Quality & Documentation
 
-We are using the rule convention used by Netflix in their
-[Iceberg Python project](https://github.com/Netflix/iceberg-python/blob/main/ruff.toml).
-To specify on which file types Ruff is running on use the key ´types_or´ in the
-pre-commit hook. See
-[ruff-pre-commit](https://github.com/astral-sh/ruff-pre-commit) for details.
+### Pre-commit Hooks
 
-### Mkdocs
-
-Run the following command to serve the documentation locally:
+Install the pre-commit Git hooks:
 
 ```bash
-> uv run mkdocs serve
+pre-commit install
 ```
 
-To build the static site for your documentation, run:
+Run hooks against all files manually:
 
 ```bash
-> uv run mkdocs build
+pre-commit run --all-files
 ```
 
-### Podman
+### Linting & Formatting
 
-The given Dockerfile is a multi-stage build. The first stage is the build stage
-(named `base` here) and the second stage (named `dev` here) is a runtime stage
-for development. The build stage is used to install the dependencies and build
-the Python package. The runtime stage is used to run the Python package. To
-build the Podman image and target the dev stage run the following command:
+We use [Ruff](https://github.com/astral-sh/ruff) for fast linting and formatting. Rules and configuration are defined in `pyproject.toml` under `[tool.ruff]`.
 
 ```bash
-podman build -t pyproject-template . --target python-dev --no-cache
+uv run ruff check src/ --fix
+uv run ruff format src/
 ```
 
-Initially, the Podman image is built with the base and the dev stage. Afterwards
-only the dev stage is rebuilt. The flag `--no-cache` in this case is used to
-avoid caching the dev stage.
+### Documentation (`mkdocs`)
 
-To run the Podman container run the following command:
+Documentation is built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) and [mkdocs-jupyter](https://github.com/danielfrg/mkdocs-jupyter).
 
 ```bash
-podman run -p 8080:8080 pyproject-template
+# Serve docs locally with live reload
+uv run poe docs-serve
+
+# Build static documentation files (output to site/)
+uv run poe docs-build
 ```
 
-### Podman compose
+---
 
-This project provides a `compose.python.yaml` that also works with Podman's
-compose implementation. The examples below show common workflows for
-development and cleanup.
+## Container Deployment (Podman)
 
-Prerequisites:
+The provided multi-stage `Dockerfile` uses Red Hat UBI 9 as the base image and builds optimized runtime images (`python-dev` and `python-prd`).
 
-- `podman` (v3+ recommended) with the `podman compose` subcommand available.
-- A running container registry if you push/pull images (optional for local builds).
+### Build and Run Standalone Container
 
-Start development containers (detached):
+Build the container image:
+
+```bash
+podman build -t fastapi:latest . --target python-dev --no-cache
+```
+
+Run the container:
+
+```bash
+podman run -p 8000:8000 fastapi:latest
+```
+
+---
+
+## Full Observability Stack (Podman Compose)
+
+The repository provides a complete local telemetry stack composed of:
+- **`python-app`**: FastAPI application with OpenTelemetry auto-instrumentation
+- **`collector`**: OpenTelemetry Collector Contrib (`0.165.0`)
+- **`openobserve`**: OpenObserve Standalone (`v1.1.2`) for logs, metrics, and traces
+
+### Start the Stack
 
 ```bash
 podman compose -f compose.python.yaml -f compose.python.dev.yaml up -d
 ```
 
-Stop and remove containers:
+> [!NOTE]
+> **SELinux Support**: Host volume bind-mounts in the compose files include the `:Z` flag (e.g. `./src:/app/src:Z`). This ensures rootless Podman automatically applies the appropriate SELinux security context on enforcing systems (such as Fedora, RHEL, and CentOS).
+
+### Stop the Stack
 
 ```bash
 podman compose -f compose.python.yaml -f compose.python.dev.yaml down
 ```
 
-Useful commands while running:
-
-- View logs: `podman compose -f compose.python.yaml -f compose.python.dev.yaml logs -f <service>`
-- List containers: `podman ps -a`
-- Exec into a container: `podman exec -it <container> /bin/sh` (or `/bin/bash`)
-- Remove unused images: `podman image prune -a`
-
-### Troubleshooting
-
-If you cannot login into OpenObserve:
+To remove all persistent data volumes (resets OpenObserve database):
 
 ```bash
-podman compose -f compose.python.yaml -f compose.python.dev.yaml down -v # remove also volumes
+podman compose -f compose.python.yaml -f compose.python.dev.yaml down -v
 ```
 
-Restart the containers again.
+### Endpoints
+- **FastAPI API**: [http://localhost:8000](http://localhost:8000) (Docs: [/docs](http://localhost:8000/docs))
+- **OpenObserve UI**: [http://localhost:5080](http://localhost:5080)
+  - Default User: `root@example.com`
+  - Default Password: `Complexpass#123`
+- **OTEL Collector OTLP Receiver**: `http://localhost:4318`
 
-Afterwards you need to reset the value for `OPENOBSERVE_AUTH_KEY` in the
-`compose.python.dev.yaml` file to the correct value. You can find the correct value
-in the OpenObserve UI under "Data Sources" -> "Security".
+---
 
-Shut down the containers and restart them again to pull the correct auth key.
+## Kubernetes Deployment (Helm)
 
-## Branching strategy
+A reproducible, production-ready Helm chart is located in [`deploy/helm/pyproject-template`](deploy/helm/pyproject-template). It deploys the FastAPI application alongside official upstream sub-charts for the **OpenTelemetry Collector** and **OpenObserve Standalone**.
 
-We are following the [trunked-based development](https://www.atlassian.com/continuous-delivery/continuous-integration/trunk-based-development).
+### 1. Build Sub-chart Dependencies
 
-The default branch is `main`. This branch serves as the single source of truth
-for all environments: development (dev), acceptance (acc), and production (prd).
+Before deploying, fetch and verify the dependent sub-charts:
 
-- **Development Environment**: Changes are deployed to the development
-  environment by directly pushing to the `main` branch. This ensures that the
-  latest updates are always available for testing and iteration.
+```bash
+helm dependency build deploy/helm/pyproject-template
+```
 
-- **Acceptance Environment**: Deployment to the acceptance environment is
-  triggered by creating a pre-release, also known as a release candidate. This
-  step allows for thorough validation and testing before the final release.
+This downloads:
+- `opentelemetry-collector` (official chart from `open-telemetry.github.io/opentelemetry-helm-charts`)
+- `openobserve-standalone` (official chart from `charts.openobserve.ai`)
 
-- **Production Environment**: Deployment to the production environment is
-  initiated by creating a release. This marks the final, stable version of the
-  software, ready for end-users.
+### 2. Deploy to Kubernetes / Minikube
 
-This streamlined approach ensures a clear and efficient workflow, minimizing
-merge conflicts and simplifying the release process.
+```bash
+# If using Minikube with a local container image:
+podman save localhost/fastapi:latest | minikube image load -
+
+# Install the Helm release
+helm install pyproject deploy/helm/pyproject-template \
+  --create-namespace \
+  --namespace pyproject-dev
+```
+
+### 3. Check Status
+
+```bash
+kubectl get pods,svc,pvc -n pyproject-dev
+```
+
+### 4. Access Services via Port Forwarding
+
+```bash
+# Access FastAPI
+kubectl port-forward -n pyproject-dev svc/pyproject-pyproject-template 8000:8000
+
+# Access OpenObserve Dashboard
+kubectl port-forward -n pyproject-dev svc/pyproject-openobserve-standalone 5080:5080
+```
+
+### 5. Uninstall
+
+```bash
+helm uninstall pyproject --namespace pyproject-dev
+kubectl delete namespace pyproject-dev
+```
+
+---
+
+## Branching Strategy
+
+We follow [trunk-based development](https://www.atlassian.com/continuous-delivery/continuous-integration/trunk-based-development).
+
+The default branch is `main`. This branch serves as the single source of truth for all environments: development (dev), acceptance (acc), and production (prd).
+
+- **Development Environment**: Changes are deployed to the development environment by directly pushing to or merging into the `main` branch.
+- **Acceptance Environment**: Deployment to the acceptance environment is triggered by creating a pre-release (release candidate).
+- **Production Environment**: Deployment to the production environment is initiated by creating an official release.
