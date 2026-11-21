@@ -3,18 +3,17 @@
 #include "oatpp/network/tcp/server/ConnectionProvider.hpp"
 
 #include "opentelemetry/exporters/otlp/otlp_http_exporter_factory.h"
-#include "opentelemetry/exporters/otlp/otlp_http_exporter_options.h"
 #include "opentelemetry/sdk/resource/resource.h"
-#include "opentelemetry/sdk/trace/simple_processor_factory.h"
+#include "opentelemetry/sdk/trace/batch_span_processor_factory.h"
+#include "opentelemetry/sdk/trace/batch_span_processor_options.h"
 #include "opentelemetry/sdk/trace/tracer_provider_factory.h"
 #include "opentelemetry/trace/provider.h"
 
 #include <cstdlib>
-#include <ctime>
 #include <memory>
+#include <random>
 #include <string>
 
-using namespace std;
 namespace trace_api = opentelemetry::trace;
 namespace trace_sdk = opentelemetry::sdk::trace;
 namespace resource_sdk = opentelemetry::sdk::resource;
@@ -22,35 +21,14 @@ namespace otlp = opentelemetry::exporter::otlp;
 
 namespace {
   void InitTracer() {
-    otlp::OtlpHttpExporterOptions opts;
-    const char* endpoint = std::getenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT");
-    if (!endpoint) {
-      endpoint = std::getenv("OTEL_EXPORTER_OTLP_ENDPOINT");
-    }
-    if (endpoint) {
-      std::string url = endpoint;
-      if (url.find("/v1/traces") == std::string::npos) {
-        if (url.back() != '/') {
-          url += "/";
-        }
-        url += "v1/traces";
-      }
-      opts.url = url;
-    } else {
-      opts.url = "http://collector:4318/v1/traces";
-    }
-
     const char* service_name = std::getenv("OTEL_SERVICE_NAME");
-    if (!service_name) {
-      service_name = "dice-server";
-    }
-
     auto resource = resource_sdk::Resource::Create({
-      {"service.name", service_name}
+      {"service.name", service_name ? service_name : "dice-server"}
     });
 
-    auto exporter = otlp::OtlpHttpExporterFactory::Create(opts);
-    auto processor = trace_sdk::SimpleSpanProcessorFactory::Create(std::move(exporter));
+    auto exporter = otlp::OtlpHttpExporterFactory::Create();
+    auto processor = trace_sdk::BatchSpanProcessorFactory::Create(
+      std::move(exporter), trace_sdk::BatchSpanProcessorOptions{});
     std::shared_ptr<trace_api::TracerProvider> provider =
       trace_sdk::TracerProviderFactory::Create(std::move(processor), resource);
     // set the global trace provider
@@ -64,15 +42,19 @@ namespace {
 }
 
 class Handler : public oatpp::web::server::HttpRequestHandler {
+  opentelemetry::nostd::shared_ptr<trace_api::Tracer> tracer_ =
+      trace_api::Provider::GetTracerProvider()->GetTracer("dice-server");
+
 public:
-  shared_ptr<OutgoingResponse> handle(const shared_ptr<IncomingRequest>& request) override {
-    auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("dice-server");
-    auto span = tracer->StartSpan("RollDiceServer");
-    int low = 1;
-    int high = 7;
-    int random = rand() % (high - low) + low;
+  std::shared_ptr<OutgoingResponse> handle(const std::shared_ptr<IncomingRequest>& /*request*/) override {
+    auto span = tracer_->StartSpan("RollDiceServer");
+    auto scope = tracer_->WithActiveSpan(span);
+
+    thread_local std::mt19937 rng{std::random_device{}()};
+    std::uniform_int_distribution<int> dist(1, 6);
     // Convert a std::string to oatpp::String
-    const string response = to_string(random);
+    const std::string response = std::to_string(dist(rng));
+
     span->End();
     return ResponseFactory::createResponse(Status::CODE_200, response.c_str());
   }
@@ -91,7 +73,6 @@ void run() {
 int main() {
   oatpp::base::Environment::init();
   InitTracer();
-  srand((int)time(0));
   run();
   oatpp::base::Environment::destroy();
   CleanupTracer();
